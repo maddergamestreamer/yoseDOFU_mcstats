@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔ Server Stats ⚔</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0d1f0d;
+  --bg2:       #162816;
+  --bg3:       #1e3a1e;
+  --panel:     #0a150a;
+  --border:    #3a5c2a;
+  --border2:   #5a8c3a;
+  --green:     #5ab032;
+  --lime:      #8dce44;
+  --diamond:   #5bcefa;
+  --gold:      #FFD700;
+  --silver:    #b0c8c8;
+  --bronze:    #cd7f32;
+  --red:       #e85c3a;
+  --text:      #e8f0d8;
+  --muted:     #7a9a6a;
+  --pixel: 4px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(255,255,255,0.015) 31px, rgba(255,255,255,0.015) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(255,255,255,0.015) 31px, rgba(255,255,255,0.015) 32px);
+  color: var(--text);
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--panel);
+  border-bottom: 4px solid var(--border);
+  padding: 1.5rem 1rem 1rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px, transparent 16px,
+    rgba(90,176,50,0.06) 16px, rgba(90,176,50,0.06) 17px
+  );
+  pointer-events: none;
+}
+.site-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(14px, 3vw, 22px);
+  color: var(--gold);
+  text-shadow: 3px 3px 0 #7a4e00, 6px 6px 0 rgba(0,0,0,0.5);
+  letter-spacing: 2px;
+  line-height: 1.6;
+  position: relative;
+}
+.site-sub {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.grass-strip {
+  height: 12px;
+  background: linear-gradient(to bottom, var(--lime) 0%, var(--lime) 50%, #8B5E3C 50%, #8B5E3C 100%);
+  margin-top: 1rem;
+  image-rendering: pixelated;
+}
+
+/* ── TABS ── */
+.tab-section {
+  max-width: 900px;
+  margin: 1.5rem auto 0;
+  padding: 0 1rem;
+}
+.tab-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tab-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 3px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.1s;
+  image-rendering: pixelated;
+  line-height: 1.4;
+  text-align: center;
+}
+.tab-btn:hover {
+  background: var(--bg2);
+  border-color: var(--border2);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+.tab-btn.active {
+  background: var(--green);
+  border-color: var(--lime);
+  color: #fff;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 0 #2a5a10;
+}
+
+/* ── RANKING PANEL ── */
+.ranking-wrap {
+  max-width: 900px;
+  margin: 1.5rem auto 0;
+  padding: 0 1rem;
+}
+.rank-header {
+  background: var(--panel);
+  border: 3px solid var(--border2);
+  border-bottom: none;
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.rank-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 1.8vw, 12px);
+  color: var(--diamond);
+  text-shadow: 2px 2px 0 rgba(0,100,150,0.4);
+}
+.rank-desc {
+  font-size: 16px;
+  color: var(--muted);
+}
+.rank-table-wrap {
+  border: 3px solid var(--border2);
+  background: var(--panel);
+  overflow: hidden;
+}
+.rank-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--bg3);
+  gap: 10px;
+  transition: background 0.1s;
+  animation: rowIn 0.25s ease both;
+}
+.rank-row:last-child { border-bottom: none; }
+.rank-row:hover { background: var(--bg3); }
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.rank-row:nth-child(1) { animation-delay: 0.00s; }
+.rank-row:nth-child(2) { animation-delay: 0.04s; }
+.rank-row:nth-child(3) { animation-delay: 0.08s; }
+.rank-row:nth-child(n+4) { animation-delay: 0.12s; }
+
+.rank-badge {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border: 3px solid;
+  flex-shrink: 0;
+}
+.rank-badge.r1 { background: #3a2800; border-color: var(--gold); color: var(--gold); box-shadow: inset 0 0 8px rgba(255,200,0,0.2); }
+.rank-badge.r2 { background: #1a2828; border-color: var(--silver); color: var(--silver); }
+.rank-badge.r3 { background: #2a1608; border-color: var(--bronze); color: var(--bronze); }
+.rank-badge.rN { background: var(--bg2); border-color: var(--border); color: var(--muted); font-size: 9px; }
+
+.rank-info { min-width: 0; }
+.rank-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(7px, 1.5vw, 10px);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-row.r1 .rank-name { color: var(--gold); }
+.rank-row.r2 .rank-name { color: var(--silver); }
+.rank-row.r3 .rank-name { color: var(--bronze); }
+
+.rank-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.rank-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  overflow: hidden;
+}
+.rank-bar-fill {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  image-rendering: pixelated;
+}
+
+.rank-val {
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  white-space: nowrap;
+  text-align: right;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+.rank-row.r1 .rank-val { color: var(--gold); }
+.rank-row.r2 .rank-val { color: var(--silver); }
+.rank-row.r3 .rank-val { color: var(--bronze); }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: 3rem;
+  line-height: 2;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">⚔ SERVER STATS ⚔</div>
+  <div class="site-sub">▶ プレイヤー統計ランキング ◀</div>
+  <div class="grass-strip"></div>
+</header>
+
+<div class="tab-section">
+  <div class="tab-label">▶ CATEGORY SELECT</div>
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="ranking-wrap">
+  <div class="rank-header">
+    <div class="rank-title" id="rankTitle">...</div>
+    <div class="rank-desc" id="rankDesc"></div>
+  </div>
+  <div class="rank-table-wrap" id="rankTable"></div>
+</div>
+
+<footer>
+  <div>MINECRAFT SERVER STATS</div>
+  <div style="margin-top:4px;color:#3a5c2a">■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■ ■</div>
+</footer>
+
+<script>
+const players = [
+  {name:"mukanae_tuzuri", play_time:11109656, deaths:54, mob_kills:34885, damage_dealt:100236, damage_taken:367694, walk:60289469, jump:107782, fish_caught:144, levels:100, looted:2814, total_dist:1573.5, fly:685.5, swim:8.7, crafted:31763, mined:292800, broken:73, chest:9437, trade:17048, furnace:357, sleep:77, sneak:2.7, fall:30.53, eff:0.273, pvp_death:1, dropped:23219, dph:0.35},
+  {name:"aoki_yomoto", play_time:10834769, deaths:200, mob_kills:4306, damage_dealt:29310, damage_taken:312868, walk:31594770, jump:121023, fish_caught:81, levels:63, looted:1308, total_dist:1495.5, fly:790.1, swim:22.1, crafted:48414, mined:62587, broken:21, chest:9265, trade:2562, furnace:1485, sleep:21, sneak:5.5, fall:17.64, eff:0.094, pvp_death:10, dropped:28449, dph:1.33},
+  {name:"uya_amato", play_time:10479681, deaths:56, mob_kills:23479, damage_dealt:27561, damage_taken:2562735, walk:31799156, jump:191275, fish_caught:0, levels:100, looted:2900, total_dist:1533.4, fly:634.1, swim:24.2, crafted:9116, mined:198222, broken:15, chest:6513, trade:8337, furnace:173, sleep:63, sneak:2.0, fall:59.59, eff:0.011, pvp_death:0, dropped:41104, dph:0.38},
+  {name:"MadderCM", play_time:15082493, deaths:100, mob_kills:4160, damage_dealt:36327, damage_taken:305507, walk:23315033, jump:180559, fish_caught:705, levels:63, looted:1436, total_dist:1226.7, fly:685.4, swim:24.1, crafted:5167, mined:35548, broken:44, chest:5106, trade:2610, furnace:358, sleep:15, sneak:5.1, fall:40.4, eff:0.119, pvp_death:0, dropped:12101, dph:0.48},
+  {name:"kai1207ykg", play_time:19563616, deaths:65, mob_kills:2922, damage_dealt:105042, damage_taken:149642, walk:30774886, jump:134169, fish_caught:302, levels:54, looted:1662, total_dist:985.5, fly:467.7, swim:14.2, crafted:6029, mined:95310, broken:69, chest:9203, trade:1079, furnace:525, sleep:40, sneak:6.5, fall:30.64, eff:0.702, pvp_death:3, dropped:12091, dph:0.24},
+  {name:"sugara1523", play_time:7713264, deaths:21, mob_kills:3584, damage_dealt:5957, damage_taken:86108, walk:26629987, jump:109655, fish_caught:17, levels:54, looted:895, total_dist:897.3, fly:350.9, swim:4.3, crafted:19985, mined:61821, broken:36, chest:7831, trade:924, furnace:388, sleep:18, sneak:2.0, fall:92.36, eff:0.069, pvp_death:2, dropped:18905, dph:0.2},
+  {name:"miridango", play_time:9665950, deaths:149, mob_kills:1010, damage_dealt:56226, damage_taken:163468, walk:40292625, jump:109569, fish_caught:210, levels:48, looted:1440, total_dist:815.3, fly:181.3, swim:11.6, crafted:17204, mined:55858, broken:124, chest:12006, trade:3521, furnace:765, sleep:55, sneak:3.2, fall:17.62, eff:0.344, pvp_death:70, dropped:7247, dph:1.11},
+  {name:"Ichijyoramu", play_time:5565908, deaths:19, mob_kills:2322, damage_dealt:10224, damage_taken:49223, walk:28933783, jump:59187, fish_caught:135, levels:51, looted:1645, total_dist:525.4, fly:101.1, swim:5.3, crafted:11462, mined:12563, broken:30, chest:4081, trade:1956, furnace:351, sleep:72, sneak:1.4, fall:11.55, eff:0.208, pvp_death:0, dropped:6737, dph:0.25},
+  {name:"PURIFEee6850", play_time:3376582, deaths:117, mob_kills:1962, damage_dealt:14928, damage_taken:114210, walk:14831274, jump:68084, fish_caught:0, levels:50, looted:2250, total_dist:540.2, fly:251.5, swim:10.7, crafted:6798, mined:11270, broken:6, chest:972, trade:4175, furnace:67, sleep:19, sneak:0.3, fall:20.22, eff:0.131, pvp_death:2, dropped:11522, dph:2.49},
+  {name:"semo2147", play_time:1644256, deaths:48, mob_kills:245, damage_dealt:28809, damage_taken:46831, walk:4571079, jump:23046, fish_caught:265, levels:29, looted:388, total_dist:166.3, fly:50.2, swim:5.2, crafted:7136, mined:10017, broken:46, chest:1195, trade:689, furnace:450, sleep:8, sneak:0.6, fall:5.99, eff:0.615, pvp_death:2, dropped:1642, dph:2.1},
+  {name:"shikabane59", play_time:2046824, deaths:28, mob_kills:593, damage_dealt:38869, damage_taken:41591, walk:6983009, jump:19700, fish_caught:85, levels:30, looted:216, total_dist:158.7, fly:56.2, swim:2.7, crafted:3195, mined:3410, broken:31, chest:977, trade:473, furnace:116, sleep:18, sneak:1.8, fall:5.38, eff:0.935, pvp_death:1, dropped:1663, dph:0.98},
+  {name:"floor9253", play_time:1213852, deaths:9, mob_kills:526, damage_dealt:61704, damage_taken:23467, walk:8255579, jump:20160, fish_caught:1, levels:28, looted:190, total_dist:145.8, fly:30.2, swim:1.2, crafted:3041, mined:4922, broken:35, chest:558, trade:1834, furnace:580, sleep:1, sneak:0.2, fall:4.45, eff:2.629, pvp_death:0, dropped:3356, dph:0.53},
+  {name:"ymetaroo", play_time:926376, deaths:8, mob_kills:697, damage_dealt:1132, damage_taken:17452, walk:4067467, jump:8710, fish_caught:0, levels:24, looted:383, total_dist:92.0, fly:19.0, swim:1.0, crafted:1212, mined:1086, broken:9, chest:380, trade:658, furnace:33, sleep:3, sneak:0.3, fall:2.1, eff:0.065, pvp_death:0, dropped:594, dph:0.62},
+  {name:"kid0116", play_time:683935, deaths:14, mob_kills:280, damage_dealt:43678, damage_taken:20265, walk:3170889, jump:15412, fish_caught:0, levels:20, looted:116, total_dist:93.7, fly:37.9, swim:0.5, crafted:1003, mined:8799, broken:66, chest:155, trade:71, furnace:4, sleep:0, sneak:0.5, fall:4.27, eff:2.155, pvp_death:4, dropped:1227, dph:1.47},
+  {name:"ikotuu", play_time:992221, deaths:17, mob_kills:457, damage_dealt:3222, damage_taken:16578, walk:4544816, jump:12490, fish_caught:0, levels:30, looted:380, total_dist:91.8, fly:24.5, swim:1.7, crafted:735, mined:2551, broken:5, chest:836, trade:130, furnace:22, sleep:10, sneak:0.4, fall:3.21, eff:0.194, pvp_death:0, dropped:513, dph:1.23},
+  {name:"Nozoroa", play_time:1025853, deaths:11, mob_kills:378, damage_dealt:13073, damage_taken:14876, walk:3184305, jump:6306, fish_caught:0, levels:29, looted:257, total_dist:63.2, fly:13.2, swim:2.2, crafted:309, mined:840, broken:10, chest:67, trade:2504, furnace:37, sleep:1, sneak:1.2, fall:1.64, eff:0.879, pvp_death:1, dropped:832, dph:0.77},
+  {name:"Ao_Hitsuji", play_time:944379, deaths:10, mob_kills:37, damage_dealt:1015, damage_taken:14041, walk:5498217, jump:17845, fish_caught:5, levels:15, looted:105, total_dist:78.7, fly:7.9, swim:0.1, crafted:4675, mined:3238, broken:20, chest:234, trade:24, furnace:449, sleep:1, sneak:1.2, fall:4.38, eff:0.072, pvp_death:2, dropped:252, dph:0.76},
+  {name:"yasi0707", play_time:104308, deaths:0, mob_kills:62, damage_dealt:2394, damage_taken:2142, walk:319744, jump:1024, fish_caught:9, levels:10, looted:41, total_dist:9.5, fly:2.8, swim:0.7, crafted:17, mined:13, broken:3, chest:1, trade:35, furnace:0, sleep:0, sneak:0.0, fall:0.2, eff:1.118, pvp_death:0, dropped:31, dph:0.0},
+  {name:"AkaOolong", play_time:43278, deaths:0, mob_kills:0, damage_dealt:42, damage_taken:112, walk:82450, jump:110, fish_caught:0, levels:0, looted:0, total_dist:1.0, fly:0.0, swim:0.0, crafted:0, mined:0, broken:0, chest:0, trade:0, furnace:0, sleep:0, sneak:0.0, fall:0.01, eff:0.375, pvp_death:0, dropped:0, dph:0.0},
+];
+
+const fmtTime = t => {
+  const h = Math.floor(t / 72000);
+  return h.toLocaleString() + 'h';
+};
+const fmtDist = v => v.toFixed(1) + ' km';
+const fmtNum  = v => v.toLocaleString();
+const fmtEff  = v => v.toFixed(3);
+const fmtDph  = v => v.toFixed(2) + '/h';
+
+const COLORS = {
+  play:    '#5bcefa',
+  mob:     '#e85c3a',
+  dmgd:    '#ff8c42',
+  dmgt:    '#c0392b',
+  walk:    '#5ab032',
+  deaths:  '#9b59b6',
+  fish:    '#3498db',
+  looted:  '#FFD700',
+  levels:  '#8dce44',
+  dist:    '#1abc9c',
+  fly:     '#5bcefa',
+  mined:   '#cd7f32',
+  crafted: '#8a6adb',
+  trade:   '#FFD700',
+  furnace: '#e67e22',
+  sleep:   '#7f77dd',
+  broken:  '#e74c3c',
+  fall:    '#e85c3a',
+  eff:     '#2ecc71',
+  pvpdeath:'#d4538e',
+  dropped: '#888',
+  dph:     '#c0392b',
+};
+
+const categories = [
+  {key:'play_time',  label:'⏱ PLAY TIME',   title:'PLAY TIME',        desc:'総プレイ時間', fmt:fmtTime, color:COLORS.play},
+  {key:'mob_kills',  label:'⚔ MOB KILLS',   title:'MOB KILLS',        desc:'討伐Mob数',   fmt:fmtNum,  color:COLORS.mob},
+  {key:'damage_dealt',label:'💥 DAMAGE',     title:'DAMAGE DEALT',     desc:'与ダメージ',  fmt:fmtNum,  color:COLORS.dmgd},
+  {key:'damage_taken',label:'🛡 TANKED',     title:'DAMAGE TAKEN',     desc:'被ダメージ',  fmt:fmtNum,  color:COLORS.dmgt},
+  {key:'walk',       label:'🚶 WALK',        title:'WALK DISTANCE',    desc:'歩行距離 (cm)',fmt:fmtNum,  color:COLORS.walk},
+  {key:'deaths',     label:'💀 DEATHS',      title:'DEATHS',           desc:'死亡回数',    fmt:fmtNum,  color:COLORS.deaths},
+  {key:'fish_caught',label:'🎣 FISHING',     title:'FISH CAUGHT',      desc:'釣り数',      fmt:fmtNum,  color:COLORS.fish},
+  {key:'looted',     label:'📦 LOOTED',      title:'CHESTS LOOTED',    desc:'チェスト開封',fmt:fmtNum,  color:COLORS.looted},
+  {key:'levels',     label:'✨ LEVELS',      title:'LEVELS GAINED',    desc:'獲得Lvl',     fmt:fmtNum,  color:COLORS.levels},
+  {key:'total_dist', label:'🌍 TOTAL DIST',  title:'TOTAL DISTANCE',   desc:'総移動距離',  fmt:fmtDist, color:COLORS.dist},
+  {key:'fly',        label:'🪂 FLY',         title:'FLY DISTANCE',     desc:'飛行距離',    fmt:fmtDist, color:COLORS.fly},
+  {key:'mined',      label:'⛏ MINED',        title:'BLOCKS MINED',     desc:'採掘ブロック',fmt:fmtNum,  color:COLORS.mined},
+  {key:'crafted',    label:'🔨 CRAFTED',     title:'ITEMS CRAFTED',    desc:'クラフト数',  fmt:fmtNum,  color:COLORS.crafted},
+  {key:'trade',      label:'🪙 TRADES',      title:'TRADE COUNT',      desc:'取引回数',    fmt:fmtNum,  color:COLORS.trade},
+  {key:'furnace',    label:'🔥 FURNACE',     title:'FURNACE USES',     desc:'かまど使用回数',fmt:fmtNum, color:COLORS.furnace},
+  {key:'sleep',      label:'🛏 SLEEP',       title:'SLEEP COUNT',      desc:'就寝回数',    fmt:fmtNum,  color:COLORS.sleep},
+  {key:'broken',     label:'🪛 BROKEN',      title:'TOOLS BROKEN',     desc:'ツール破壊数',fmt:fmtNum,  color:COLORS.broken},
+  {key:'fall',       label:'🫨 FALL DIST',   title:'FALL DISTANCE',    desc:'落下距離',    fmt:fmtDist, color:COLORS.fall},
+  {key:'eff',        label:'⚡ EFFICIENCY',  title:'COMBAT EFFICIENCY',desc:'与ダメ÷被ダメ',fmt:fmtEff, color:COLORS.eff},
+  {key:'pvp_death',  label:'🗡 PVP DEATHS',  title:'KILLED BY PLAYER', desc:'PvPで倒された回数',fmt:fmtNum,color:COLORS.pvpdeath},
+  {key:'dropped',    label:'📤 DROPPED',     title:'ITEMS DROPPED',    desc:'アイテムドロップ数',fmt:fmtNum,color:COLORS.dropped},
+  {key:'dph',        label:'💀/h DEATH RATE',title:'DEATH RATE',       desc:'1時間あたり死亡回数',fmt:fmtDph,color:COLORS.dph, reverse:true},
+];
+
+let current = 0;
+
+function buildTabs() {
+  const el = document.getElementById('tabs');
+  el.innerHTML = categories.map((c,i) =>
+    `<button class="tab-btn ${i===current?'active':''}" onclick="switchCat(${i})">${c.label}</button>`
+  ).join('');
+}
+
+function buildRanking() {
+  const cat = categories[current];
+  document.getElementById('rankTitle').textContent = '▶ ' + cat.title;
+  document.getElementById('rankDesc').textContent = cat.desc;
+
+  const sorted = [...players].sort((a,b) => cat.reverse ? a[cat.key]-b[cat.key] : b[cat.key]-a[cat.key]);
+  const maxVal = sorted[0][cat.key];
+  const minVal = sorted[sorted.length-1][cat.key];
+  const range  = maxVal - minVal || 1;
+
+  const html = sorted.map((p,i) => {
+    const pct = Math.max(4, Math.round((p[cat.key] - minVal) / range * 100));
+    const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rN';
+    const rankLbl = i===0?'1st':i===1?'2nd':i===2?'3rd':`${i+1}`;
+    return `
+<div class="rank-row ${rankCls}" style="animation-delay:${Math.min(i*0.04,0.2)}s">
+  <div class="rank-badge ${rankCls}">${rankLbl}</div>
+  <div class="rank-info">
+    <div class="rank-name">${p.name}</div>
+    <div class="rank-bar-wrap">
+      <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${cat.color}"></div></div>
+    </div>
+  </div>
+  <div class="rank-val">${cat.fmt(p[cat.key])}</div>
+</div>`;
+  }).join('');
+
+  document.getElementById('rankTable').innerHTML = html;
+}
+
+window.switchCat = function(i) {
+  current = i;
+  document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+  buildRanking();
+};
+
+buildTabs();
+buildRanking();
+</script>
+</body>
+</html>
